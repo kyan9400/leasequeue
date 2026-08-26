@@ -8,6 +8,10 @@ A compact, durable background-job service with explicit lease ownership, bounded
 
 ![LeaseQueue operations console](docs/leasequeue.png)
 
+## Live demo
+
+[Open LeaseQueue](https://leasequeue.vercel.app/) — a public sandbox for exploring the queue and worker protocol. Its temporary database can reset when the Vercel container scales down; the Docker deployment below uses durable storage.
+
 ## Why it exists
 
 In-memory background tasks disappear when a process restarts. A plain database status flag can let two workers run the same job or allow a late worker to overwrite a newer result. LeaseQueue makes those failure cases visible and testable without requiring a message broker.
