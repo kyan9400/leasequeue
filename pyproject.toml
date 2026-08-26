@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "leasequeue"
+version = "1.0.0"
+description = "A durable background-job service with leases, retries, idempotency, and dead-letter recovery."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Hassan Ak" }]
+keywords = ["background-jobs", "queue", "fastapi", "sqlite", "retries", "leases"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: FastAPI",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: System :: Distributed Computing",
+]
+dependencies = [
+  "aiosqlite>=0.21,<1",
+  "fastapi>=0.116,<1",
+  "pydantic-settings>=2.10,<3",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "asgi-lifespan>=2.1,<3",
+  "build>=1.3,<2",
+  "httpx>=0.28,<1",
+  "pytest>=8.4,<10",
+  "pytest-asyncio>=1.1,<2",
+  "pytest-cov>=6,<8",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+leasequeue = "leasequeue.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/kyan9400/leasequeue"
+Issues = "https://github.com/kyan9400/leasequeue/issues"
+Source = "https://github.com/kyan9400/leasequeue"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/leasequeue"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --cov=leasequeue --cov-report=term-missing"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/leasequeue/api.py" = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"

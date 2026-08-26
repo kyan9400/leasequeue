@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="LeaseQueue durable background-job operations console" />
+    <title>LeaseQueue / Operations Console</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <div class="signal-line" aria-hidden="true"></div>
+    <header class="masthead">
+      <a class="brand" href="/" aria-label="LeaseQueue home">
+        <span class="brand-mark">LQ</span>
+        <span>
+          <strong>LeaseQueue</strong>
+          <small>Durable work control</small>
+        </span>
+      </a>
+      <div class="system-state">
+        <span class="pulse" aria-hidden="true"></span>
+        <span>Database ready</span>
+        <span class="version">v1.0</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Operations console / local node</p>
+          <h1 id="page-title">Work that survives the worker.</h1>
+        </div>
+        <p class="hero-copy">
+          Submit once, claim with ownership, recover on expiry. Every transition is recorded
+          so retries and dead letters stay explainable.
+        </p>
+      </section>
+
+      <section class="metrics" aria-label="Queue metrics">
+        <article class="metric metric-primary">
+          <span>Ready</span>
+          <strong id="statQueued">0</strong>
+          <small>queued now</small>
+        </article>
+        <article class="metric">
+          <span>Leased</span>
+          <strong id="statRunning">0</strong>
+          <small>active workers</small>
+        </article>
+        <article class="metric">
+          <span>Retry</span>
+          <strong id="statRetry">0</strong>
+          <small>waiting on backoff</small>
+        </article>
+        <article class="metric metric-danger">
+          <span>Dead</span>
+          <strong id="statDead">0</strong>
+          <small>needs review</small>
+        </article>
+        <article class="metric metric-wide">
+          <span>Oldest pending</span>
+          <strong id="statAge">—</strong>
+          <small>queue pressure</small>
+        </article>
+      </section>
+
+      <div class="workspace">
+        <section class="panel jobs-panel" aria-labelledby="jobs-title">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Live inventory</p>
+              <h2 id="jobs-title">Jobs</h2>
+            </div>
+            <div class="filters">
+              <label>
+                <span class="sr-only">Queue</span>
+                <input id="queueFilter" value="default" placeholder="queue" />
+              </label>
+              <label>
+                <span class="sr-only">Status</span>
+                <select id="statusFilter">
+                  <option value="">All states</option>
+                  <option value="queued">Queued</option>
+                  <option value="running">Running</option>
+                  <option value="retry">Retry</option>
+                  <option value="completed">Completed</option>
+                  <option value="dead">Dead</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </label>
+              <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh jobs">
+                ↻
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>State</th>
+                  <th>Task</th>
+                  <th>Attempt</th>
+                  <th>Priority</th>
+                  <th>Updated</th>
+                  <th><span class="sr-only">Open</span></th>
+                </tr>
+              </thead>
+              <tbody id="jobsBody"></tbody>
+            </table>
+            <div class="empty" id="emptyState" hidden>
+              <span>∅</span>
+              <strong>No jobs on this channel</strong>
+              <p>Submit work from the control rail or change the filters.</p>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-rail">
+          <section class="panel control-card" aria-labelledby="submit-title">
+            <div class="section-number">01</div>
+            <p class="eyebrow">Producer</p>
+            <h2 id="submit-title">Submit work</h2>
+            <form id="submitForm">
+              <div class="field-row">
+                <label>Queue<input name="queue" value="default" required /></label>
+                <label>Priority<input name="priority" type="number" value="10" min="-100" max="100" /></label>
+              </div>
+              <label>Task<input name="task" value="invoice.generate" required /></label>
+              <label>
+                Payload
+                <textarea name="payload" rows="4">{"invoiceId":"inv_481","format":"pdf"}</textarea>
+              </label>
+              <div class="field-row">
+                <label>Max attempts<input name="maxAttempts" type="number" value="3" min="1" max="20" /></label>
+                <label>Retry base<input name="retryBaseSeconds" type="number" value="15" min="1" /></label>
+              </div>
+              <button class="button button-primary" type="submit">Enqueue job <span>→</span></button>
+            </form>
+          </section>
+
+          <section class="panel control-card worker-card" aria-labelledby="worker-title">
+            <div class="section-number">02</div>
+            <p class="eyebrow">Worker protocol</p>
+            <h2 id="worker-title">Claim next</h2>
+            <form id="claimForm">
+              <label>Worker ID<input name="workerId" value="worker-local-01" required /></label>
+              <label>Queue<input name="queue" value="default" required /></label>
+              <button class="button button-dark" type="submit">Acquire lease</button>
+            </form>
+            <div class="lease-card" id="leaseCard" hidden>
+              <div class="lease-header">
+                <span class="pulse"></span>
+                <strong>Lease active</strong>
+              </div>
+              <p id="leaseTask"></p>
+              <code id="leaseId"></code>
+              <label>Failure reason<input id="failureReason" value="Upstream provider timed out" /></label>
+              <div class="lease-actions">
+                <button class="button button-success" id="completeButton" type="button">Complete</button>
+                <button class="button button-danger" id="failButton" type="button">Fail + retry</button>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <dialog id="jobDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Execution record</p>
+          <h2 id="dialogTitle">Job detail</h2>
+        </div>
+        <button class="icon-button" id="closeDialog" type="button" aria-label="Close detail">×</button>
+      </div>
+      <div id="jobDetail"></div>
+      <h3>Transition log</h3>
+      <ol class="timeline" id="eventTimeline"></ol>
+      <div class="dialog-actions" id="dialogActions"></div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
