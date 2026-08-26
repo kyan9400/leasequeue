@@ -56,6 +56,12 @@ jobs:
       - name: Build image
         run: docker build --tag leasequeue:test .
 
+      - name: Build Vercel image
+        run: docker build --file Dockerfile.vercel --tag leasequeue:vercel .
+
+      - name: Inspect Vercel runtime user
+        run: test "$(docker run --rm --entrypoint=id leasequeue:vercel -u)" != "0"
+
       - name: Inspect runtime user
         run: test "$(docker run --rm --entrypoint=id leasequeue:test -u)" != "0"
 

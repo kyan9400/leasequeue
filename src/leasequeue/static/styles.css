@@ -72,6 +72,9 @@ button { cursor: pointer; }
 .system-state { display: flex; align-items: center; gap: 9px; color: #c4c6c7; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
 .version { margin-left: 14px; padding: 5px 7px; border: 1px solid var(--line); color: var(--muted); }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 0 4px rgba(216, 255, 62, 0.12); animation: beacon 2s ease-in-out infinite; }
+.sandbox-banner { display: flex; gap: 12px; justify-content: center; padding: 9px 18px; color: #101300; background: var(--signal); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.sandbox-banner strong { font-weight: 900; }
+.sandbox-banner span { opacity: .72; }
 
 main { width: min(1560px, 100%); margin: 0 auto; padding: clamp(28px, 5vw, 72px) clamp(18px, 4vw, 64px) 80px; }
 .hero { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.7fr); align-items: end; gap: 60px; margin-bottom: 54px; }

@@ -1,0 +1,31 @@
+FROM python:3.13-slim AS builder
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+WORKDIR /build
+COPY pyproject.toml README.md LICENSE ./
+COPY src ./src
+RUN python -m pip wheel --wheel-dir /wheels .
+
+FROM python:3.13-slim AS runner
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    LEASEQUEUE_ENVIRONMENT=production \
+    LEASEQUEUE_DATABASE_PATH=/tmp/leasequeue.db \
+    PORT=8000
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get upgrade --yes \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 1001 leasequeue \
+    && useradd --uid 1001 --gid leasequeue --create-home leasequeue
+COPY --from=builder /wheels /wheels
+RUN python -m pip install --no-cache-dir /wheels/* \
+    && python -m pip uninstall --yes pip setuptools \
+    && rm -rf /wheels
+
+USER leasequeue
+EXPOSE 8000
+CMD ["sh", "-c", "exec uvicorn leasequeue.main:app --host 0.0.0.0 --port ${PORT} --workers 1 --proxy-headers"]
