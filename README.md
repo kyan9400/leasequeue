@@ -124,6 +124,8 @@ All request models reject unknown fields. Job payloads are capped at 64 KiB, req
 | `LEASEQUEUE_ENVIRONMENT` | `development` | Set to `production` to disable API docs |
 | `LEASEQUEUE_MAX_REQUEST_BYTES` | `131072` | Content-length guard for request bodies |
 
+[`.env.example`](.env.example) lists these variables with their defaults. LeaseQueue reads the process environment only, so export the values in your shell or pass a copy of the file with `docker run --env-file .env`.
+
 SQLite WAL mode and a five-second busy timeout are enabled on each connection. Claim operations deliberately serialize writers; this project targets a compact single-node workload, not broker-scale throughput or multi-region replication.
 
 ## Verification

@@ -5,5 +5,11 @@
 __pycache__/
 *.db
 *.py[cod]
+build/
 dist/
+htmlcov/
 *.egg-info/
+.env
+.env.*
+!.env.example
+.DS_Store
